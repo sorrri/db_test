@@ -94,7 +94,7 @@ SELECT
 	, EMP_NAME
 	, HIRE_DATE
 FROM employee
-WHERE EMP_NAME NOT LIKE '김%';
+WHERE NOT EMP_NAME LIKE '김%';
 
 -- 14. employee 테이블에서 '하' 문자가 이름에 포함된 직원의 이름, 주민번호, 부서코드 조회
 SELECT 
@@ -110,7 +110,7 @@ SELECT
 	, SALARY
 	, JOB_CODE
 FROM employee
-WHERE JOB_CODE = 'J2' AND SALARY >= 2000000;
+WHERE JOB_CODE = 'J2' AND SALARY >= 2000000 OR JOB_CODE = 'J7';
 
 -- 16. 'J2'직급이거나 'J7'직급인 직원들 중에 급여가 200만원 이상인 직원의 이름, 급여, 직급코드 조회
 SELECT
@@ -118,7 +118,7 @@ SELECT
 	, SALARY
 	, JOB_CODE
 FROM employee
-WHERE JOB_CODE = 'J2' OR JOB_CODE = 'J7' AND SALARY >= 2000000;
+WHERE (JOB_CODE = 'J2' OR JOB_CODE = 'J7') AND SALARY >= 2000000;
 
 -- 17. IN 연산자로 업그레이드
 SELECT
@@ -142,13 +142,14 @@ SELECT
 	, a.EMP_NAME
 	, b.DEPT_TITLE
 FROM employee a
-JOIN department b ON a.DEPT_CODE = b.DEPT_ID
+LEFT JOIN department b ON a.DEPT_CODE = b.DEPT_ID
 WHERE a.EMP_NAME LIKE '%형%';
 
 -- 2. 해외영업팀에 근무하는 사원명, 직급명, 부서코드, 부서명을 조회(9명)
 SELECT
 	  a.EMP_NAME
 	, c.JOB_NAME
+	, a.DEPT_CODE
 	, b.DEPT_TITLE
 FROM employee a
 JOIN department b ON a.DEPT_CODE = b.DEPT_ID
@@ -184,13 +185,11 @@ SELECT
 	  a.EMP_NAME
 	, b.JOB_NAME
 	, a.SALARY
+	, A.SALARY * ( 1 + IFNULL(A.BONUS, 0)) * 12
 FROM employee a
 JOIN job b ON a.JOB_CODE = b.JOB_CODE
 JOIN sal_grade c ON a.SAL_LEVEL = c.SAL_LEVEL
-WHERE c.MIN_SAL < a.SALARY AND BONUS IS NOT NULL a.;
-
-
-
+WHERE c.MIN_SAL < a.SALARY;
 
 -- 6. 한국(KO)과 일본(JP)에 근무하는 직원들의 사원명, 부서명, 지역명, 국가명을 조회(15명)
 SELECT 
@@ -205,8 +204,15 @@ JOIN NATIONAL d ON c.NATIONAL_CODE = d.NATIONAL_CODE
 WHERE d.NATIONAL_CODE IN ('KO', 'JP');
 
 -- 7. 같은 부서에 근무하는 직원들의 사원명, 부서코드, 동료이름을 조회(60명)(SELF JOIN)
-
-
+SELECT
+       A.EMP_NAME
+     , A.DEPT_CODE
+     , B.EMP_NAME
+  FROM EMPLOYEE A
+  JOIN EMPLOYEE B ON (A.DEPT_CODE = B.DEPT_CODE)  -- 동료 있는 사람만 조회하기 위해 INNER JOIN
+ WHERE A.EMP_ID != B.EMP_ID                       -- 나 자신을 제외한 동료만 조회(동명이인을 고려해 사번으로 비교)
+ ORDER BY 1;  
+ 
 -- 8. 보너스포인트가 없는 직원들 중에서 직급코드가 'J4'와 'J7'인 직원들의 사원명, 직급명, 급여를 조회(8명)
 -- (단, JOIN과 IN 사용)
 SELECT 
